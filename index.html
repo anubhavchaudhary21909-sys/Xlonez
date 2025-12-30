@@ -9,143 +9,120 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-body {
-  margin: 0;
-  background: #0f0f0f;
-  font-family: Arial, sans-serif;
-  color: #fff;
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#0f0f0f;
+  font-family:Arial,sans-serif;
+  color:#fff;
 }
-.app {
-  max-width: 480px;
-  margin: 60px auto;
-  padding: 24px;
-  background: #1a1a1a;
-  border-radius: 14px;
+.app{
+  max-width:420px;
+  margin:60px auto;
+  padding:24px;
+  background:#1a1a1a;
+  border-radius:14px;
 }
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
+h1{text-align:center;margin-bottom:20px}
+input,button{
+  width:100%;
+  padding:12px;
+  border-radius:6px;
+  border:none;
+  font-size:15px;
 }
-input, button {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 6px;
-  border: none;
-  font-size: 1rem;
+input{background:#2a2a2a;color:#fff;margin-bottom:14px}
+button{background:#e50914;color:#fff}
+.link{margin-top:12px;color:#00e0ff;word-break:break-all;font-size:13px}
+.player{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:none;
 }
-input {
-  background: #2a2a2a;
-  color: #fff;
-}
-button {
-  background: #e50914;
-  color: #fff;
-}
-.link {
-  word-break: break-word;
-  color: #00e0ff;
-  font-size: 0.9rem;
-}
-.player {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  display: none;
-}
-video, iframe {
-  width: 100%;
-  height: 100%;
-}
+video,iframe{width:100%;height:100%;border:none}
+.secret{position:fixed;bottom:0;right:0;width:40px;height:40px;opacity:0}
 </style>
 </head>
 
 <body>
 
 <div class="app" id="home">
-  <h2>XLonez Player</h2>
-  <input id="videoUrl" placeholder="Paste video URL">
-  <input id="expiry" type="number" placeholder="Expiry (minutes)">
+  <h1>XLonez Player</h1>
+  <input id="url" placeholder="Paste video URL">
+  <input id="exp" type="number" placeholder="Expiry (minutes optional)">
   <button onclick="generate()">Generate Link</button>
-  <div class="link" id="result"></div>
+  <div class="link" id="out"></div>
 </div>
 
 <div class="player" id="player"></div>
+<div class="secret" id="secret"></div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA8Ck4k7gMfn9oU1nq-JBijML1JE6yVx84",
-  authDomain: "project45-627cc.firebaseapp.com",
-  databaseURL: "https://project45-627cc-default-rtdb.firebaseio.com",
-  projectId: "project45-627cc",
-  storageBucket: "project45-627cc.firebasestorage.app",
-  messagingSenderId: "850515567224",
-  appId: "1:850515567224:web:bcbed252ee8596c08fc38d"
-};
+/* CONFIG */
+const TOKEN="XLZ-9A7F-SECRET";
+const PATH="_x9Lz_k3y_98";
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+/* FIREBASE */
+firebase.initializeApp({
+  apiKey:"AIzaSyA8Ck4k7gMfn9oU1nq-JBijML1JE6yVx84",
+  authDomain:"project45-627cc.firebaseapp.com",
+  databaseURL:"https://project45-627cc-default-rtdb.firebaseio.com",
+  projectId:"project45-627cc"
+});
+const db=firebase.database();
 
-function generate() {
-  const url = videoUrl.value.trim();
-  if (!url) return alert("Enter video URL");
-
-  const id = Math.random().toString(36).slice(2, 10);
-  const exp = expiry.value ? Date.now() + expiry.value * 60000 : null;
-
-  db.ref("xlonez_links/" + id).set({ url, expiry: exp });
-
-  result.innerText = location.origin + "?watch=" + id;
+/* CREATE */
+function generate(){
+  if(!url.value.trim()) return alert("Enter URL");
+  const id=btoa(Date.now()+"_"+Math.random()).replace(/=/g,"");
+  db.ref(PATH+"/"+id).set({
+    url:url.value.trim(),
+    expiry:exp.value?Date.now()+exp.value*60000:null
+  });
+  out.innerText=location.origin+location.pathname+"?watch="+id;
 }
 
-function play() {
-  const id = new URLSearchParams(location.search).get("watch");
-  if (!id) return;
-
-  db.ref("xlonez_links/" + id).once("value").then(snap => {
-    if (!snap.exists()) {
-      document.body.innerText = "Link not found";
-      return;
+/* CLEANUP */
+db.ref(PATH).once("value",s=>{
+  s.forEach(c=>{
+    const d=c.val();
+    if(d.expiry && Date.now()>d.expiry){
+      db.ref(PATH+"/"+c.key).remove();
     }
+  });
+});
 
-    const data = snap.val();
-    if (data.expiry && Date.now() > data.expiry) {
-      document.body.innerText = "Link expired";
-      return;
+/* PLAY */
+const id=new URLSearchParams(location.search).get("watch");
+if(id){
+  db.ref(PATH+"/"+id).once("value",s=>{
+    if(!s.exists()) return document.body.innerText="Link not found";
+    const d=s.val();
+    if(d.expiry && Date.now()>d.expiry){
+      db.ref(PATH+"/"+id).remove();
+      return document.body.innerText="Link expired";
     }
-
-    home.style.display = "none";
-    player.style.display = "block";
-
-    if (data.url.includes("youtube") || data.url.includes("vimeo")) {
-      const iframe = document.createElement("iframe");
-      iframe.src = data.url;
-      iframe.allowFullscreen = true;
-      player.appendChild(iframe);
-    } else {
-      const video = document.createElement("video");
-      video.src = data.url;
-      video.controls = true;
-      video.autoplay = true;
-      player.appendChild(video);
-    }
+    home.style.display="none";
+    player.style.display="block";
+    player.innerHTML=d.url.includes("youtube")
+      ?`<iframe src="${d.url}" allowfullscreen></iframe>`
+      :`<video src="${d.url}" controls autoplay></video>`;
   });
 }
 
-play();
-
-/* SECRET BUTTON – 5 taps bottom-right */
-let taps = 0;
-document.addEventListener("click", e => {
-  if (e.clientX > innerWidth - 60 && e.clientY > innerHeight - 60) {
-    taps++;
-    setTimeout(() => taps = 0, 2000);
-    if (taps === 5) {
-      window.open("/opposite.html", "_blank");
-      taps = 0;
-    }
+/* SECRET BUTTON */
+let t=0,tm=null;
+secret.onclick=()=>{
+  t++;
+  if(!tm) tm=setTimeout(()=>{t=0;tm=null},1500);
+  if(t>=5){
+    window.open("/opposite.html?key="+TOKEN,"_blank");
+    t=0;
   }
-});
+};
+
+document.addEventListener("contextmenu",e=>e.preventDefault());
 </script>
 
 </body>
