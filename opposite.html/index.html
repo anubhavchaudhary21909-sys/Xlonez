@@ -1,116 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>XLonez Link Decoder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XLonez Decoder</title>
+
+<script>
+const SECRET="XLZ-9A7F-SECRET";
+if(new URLSearchParams(location.search).get("key")!==SECRET){
+  document.body.innerText="Access Denied";
+  throw "";
+}
+</script>
+
 <style>
-body {
-  margin: 0;
-  background: #0f0f0f;
-  font-family: Arial, sans-serif;
-  color: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 10px;
+body{
+  margin:0;
+  background:#000;
+  color:#fff;
+  font-family:Arial;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+  text-align:center;
 }
-
-.app {
-  max-width: 480px;
-  width: 100%;
-  background: #1a1a1a;
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 0 25px rgba(0,0,0,0.7);
+.box{
+  background:#111;
+  padding:20px;
+  border-radius:10px;
+  width:90%;
+  max-width:400px;
 }
-
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
+input,button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:6px;
+  margin-top:10px;
 }
-
-input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 6px;
-  border: none;
-  margin-bottom: 12px;
-  background: #2a2a2a;
-  color: #fff;
-  font-size: 1rem;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 6px;
-  border: none;
-  background: #00e0ff;
-  color: #000;
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #00c4d6;
-}
-
-.result-box {
-  margin-top: 15px;
-  background: #2a2a2a;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  word-break: break-word;
-}
+input{background:#222;color:#fff}
+button{background:#e50914;color:#fff}
 </style>
 </head>
+
 <body>
 
-<div class="app">
-  <h1>XLonez Decoder</h1>
-  <input id="linkInput" placeholder="Paste temporary link">
-  <button onclick="decode()">Decode Link</button>
-  <div class="result-box" id="result"></div>
+<div class="box">
+  <h3>XLonez Decoder</h3>
+  <input id="code" placeholder="Paste XLonez link">
+  <button onclick="decode()">Decode</button>
+  <div id="res" style="margin-top:10px;font-size:13px;color:#00e0ff"></div>
 </div>
 
 <script>
-function decode() {
-  const link = document.getElementById("linkInput").value.trim();
-  if (!link) {
-    alert("Enter a link");
-    return;
-  }
-
-  try {
-    const url = new URL(link);
-    const encoded = url.searchParams.get("watch");
-    if (!encoded) {
-      document.getElementById("result").innerText = "Invalid link format";
-      return;
-    }
-
-    const data = JSON.parse(atob(encoded));
-    let message = `Original URL: ${data.url}\n`;
-    if (data.expiry) {
-      const expiryDate = new Date(data.expiry);
-      message += `Expires: ${expiryDate.toLocaleString()}\n`;
-      if (Date.now() > data.expiry) {
-        message += "Status: Expired ❌";
-      } else {
-        message += "Status: Valid ✅";
-      }
-    } else {
-      message += "Expires: No expiration\nStatus: Valid ✅";
-    }
-
-    document.getElementById("result").innerText = message;
-
-  } catch (e) {
-    document.getElementById("result").innerText = "Invalid link";
+function decode(){
+  try{
+    const u=new URL(code.value.trim());
+    const id=u.searchParams.get("watch");
+    if(!id) throw "";
+    res.innerText="Decoded ID: "+id;
+  }catch{
+    res.innerText="Invalid link";
   }
 }
 </script>
