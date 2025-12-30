@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>XLonez Link Decoder</title>
+<style>
+body {
+  margin: 0;
+  background: #0f0f0f;
+  font-family: Arial, sans-serif;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 10px;
+}
+
+.app {
+  max-width: 480px;
+  width: 100%;
+  background: #1a1a1a;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 0 25px rgba(0,0,0,0.7);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  margin-bottom: 12px;
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 1rem;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  background: #00e0ff;
+  color: #000;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #00c4d6;
+}
+
+.result-box {
+  margin-top: 15px;
+  background: #2a2a2a;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <h1>XLonez Decoder</h1>
+  <input id="linkInput" placeholder="Paste temporary link">
+  <button onclick="decode()">Decode Link</button>
+  <div class="result-box" id="result"></div>
+</div>
+
+<script>
+function decode() {
+  const link = document.getElementById("linkInput").value.trim();
+  if (!link) {
+    alert("Enter a link");
+    return;
+  }
+
+  try {
+    const url = new URL(link);
+    const encoded = url.searchParams.get("watch");
+    if (!encoded) {
+      document.getElementById("result").innerText = "Invalid link format";
+      return;
+    }
+
+    const data = JSON.parse(atob(encoded));
+    let message = `Original URL: ${data.url}\n`;
+    if (data.expiry) {
+      const expiryDate = new Date(data.expiry);
+      message += `Expires: ${expiryDate.toLocaleString()}\n`;
+      if (Date.now() > data.expiry) {
+        message += "Status: Expired ❌";
+      } else {
+        message += "Status: Valid ✅";
+      }
+    } else {
+      message += "Expires: No expiration\nStatus: Valid ✅";
+    }
+
+    document.getElementById("result").innerText = message;
+
+  } catch (e) {
+    document.getElementById("result").innerText = "Invalid link";
+  }
+}
+</script>
+
+</body>
+</html>
