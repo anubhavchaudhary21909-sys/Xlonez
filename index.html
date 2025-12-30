@@ -2,24 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>XLonez Player</title>
-
 <style>
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
   background: #0f0f0f;
   font-family: Arial, sans-serif;
   color: #fff;
+  overflow-x: hidden;
 }
 
 .app {
-  max-width: 420px;
-  margin: 80px auto;
-  padding: 30px;
+  max-width: 480px;
+  width: 90%;
+  margin: 60px auto;
+  padding: 25px;
   background: #1a1a1a;
   border-radius: 14px;
   box-shadow: 0 0 25px rgba(0,0,0,0.7);
@@ -27,18 +30,19 @@ body {
 
 h1 {
   text-align: center;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
+  font-size: 1.6rem;
 }
 
 input {
   width: 100%;
   padding: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   border-radius: 6px;
   border: none;
   background: #2a2a2a;
   color: #fff;
-  font-size: 14px;
+  font-size: 1rem;
 }
 
 button {
@@ -48,7 +52,7 @@ button {
   border: none;
   border-radius: 6px;
   color: #fff;
-  font-size: 16px;
+  font-size: 1.1rem;
   cursor: pointer;
 }
 
@@ -57,9 +61,9 @@ button:hover {
 }
 
 .link-box {
-  margin-top: 15px;
-  font-size: 13px;
-  word-break: break-all;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  word-break: break-word;
   color: #00e0ff;
 }
 
@@ -69,6 +73,7 @@ button:hover {
   inset: 0;
   background: #000;
   display: none;
+  z-index: 9999;
 }
 
 video, iframe {
@@ -76,9 +81,24 @@ video, iframe {
   height: 100%;
   border: none;
 }
+
+@media (max-width: 500px) {
+  .app {
+    margin: 40px 10px;
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  input, button {
+    font-size: 1rem;
+    padding: 10px;
+  }
+}
 </style>
 </head>
-
 <body>
 
 <div class="app" id="home">
@@ -95,6 +115,7 @@ video, iframe {
 <div class="player" id="player"></div>
 
 <script>
+// --------------- MAIN APP FUNCTIONS ----------------
 function generate() {
   const url = document.getElementById("videoUrl").value.trim();
   const expiry = document.getElementById("expiry").value;
@@ -137,13 +158,58 @@ function play() {
   player.style.display = "block";
 
   if (data.url.includes("youtube") || data.url.includes("vimeo")) {
-    player.innerHTML = `<iframe src="${data.url}" allowfullscreen></iframe>`;
+    const iframe = document.createElement("iframe");
+    iframe.src = data.url;
+    iframe.allowFullscreen = true;
+    player.appendChild(iframe);
   } else {
-    player.innerHTML = `<video src="${data.url}" controls autoplay></video>`;
+    const video = document.createElement("video");
+    video.src = data.url;
+    video.controls = true;
+    video.autoplay = true;
+    player.appendChild(video);
   }
 }
 
 play();
+
+// --------------- SECRET BUTTON ----------------
+let secretClickCount = 0;
+let secretTimeout;
+
+function openSecretApp() {
+  const oppositeAppUrl = "opposite.html"; // Replace with your decoder URL
+  window.open(oppositeAppUrl, "_blank");
+}
+
+// Detect touch or click in bottom-right corner
+document.addEventListener("click", (e) => {
+  const hotspot = 60; // bottom-right hotspot size
+  if (e.clientX > window.innerWidth - hotspot && e.clientY > window.innerHeight - hotspot) {
+    secretClickCount++;
+    clearTimeout(secretTimeout);
+    secretTimeout = setTimeout(() => secretClickCount = 0, 2500);
+    if (secretClickCount >= 5) {
+      openSecretApp();
+      secretClickCount = 0;
+    }
+  }
+});
+
+// Mobile-friendly keyboard sequence
+const secretCode = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown"];
+let codeIndex = 0;
+document.addEventListener("keydown", (e) => {
+  if (e.key === secretCode[codeIndex]) {
+    codeIndex++;
+    if (codeIndex === secretCode.length) {
+      openSecretApp();
+      codeIndex = 0;
+    }
+  } else {
+    codeIndex = 0;
+  }
+});
 </script>
 
 </body>
