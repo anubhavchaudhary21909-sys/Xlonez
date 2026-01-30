@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XLonez Player</title>
+
+<style>
+body { margin:0; background:black }
+video { width:100%; height:100vh }
+</style>
+</head>
+
+<body>
+
+<video id="player" controls playsinline></video>
+
+<script>
+const p = new URLSearchParams(location.search);
+const id = p.get("id");
+const e  = p.get("e");
+const t  = p.get("t");
+
+if (!id || !e || !t) {
+  document.body.innerHTML = "Invalid link";
+}
+
+const stream =
+  "https://temporary-universities-president-crawford.trycloudflare.com" +
+  id + "?e=" + e + "&t=" + t;
+
+document.getElementById("player").src = stream;
+</script>
+
+</body>
+</html>
